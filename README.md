@@ -8,6 +8,7 @@ Below the corresponding IP adress i'll use for the following of the demonstratio
 * 192.168.1.51
 * 192.168.1.52
 
+# 1-Manual installation 
 
 ## Download kafka 
 First of all download kafka & copy it to all servers : 
@@ -38,3 +39,48 @@ In my case :
 ```
 zookeeper.connect=192.168.1.50:2181,192.168.1.51:2181, 192.158.1.52:2181
 ```
+## Launch Zookeper server 
+To do on each node.
+
+```
+bin/zookeeper-server-start.sh config/zookeeper.properties
+```
+
+## Launch Kafka server
+To do on each node.
+
+```
+bin/kafka-server-start.sh config/server.properties
+```
+
+## Create a topic
+
+```
+bin/kafka-topics.sh --create --bootstrap-server 192.168.1.50:9092 --replication-factor 3 --partitions 3 --topic mytopic
+```
+
+## Send messages with Kafka producer
+
+```
+bin/kafka-console-producer.sh --broker-list 192.168.1.50:9092 --topic mytopic
+```
+
+## Start a consumer attach to mytopic
+Open a second terminal & run 
+
+```
+bin/kafka-console-consumer.sh --bootstrap-server 192.168.1.50:9092 --topic mytopic
+```
+
+For both consumer & producer, you can pass a list of kafka-server in case the first one doesn't respond : 
+
+```
+bin/kafka-console-consumer.sh --bootstrap-server 192.168.1.50:9092 192.168.1.51:9092 192.168.1.52:9092--topic mytopic
+```
+NB: Only the first one will be used, except if an error occured
+
+
+You can add the option ```--from-beginning``` to collect historical messages from mytopic
+
+# 2-Deploy with Docker swarm
+To do 
