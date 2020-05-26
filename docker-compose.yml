@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+        
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka1:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 0.0.0.0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 1
+      KAFKA_offsets_topic_replication_factor: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka-data:/broker1/kafka
+
+
+  kafka2:
+    image: wurstmeister/kafka
+    ports:
+      - "9093:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 0.0.0.0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 2
+      KAFKA_offsets_topic_replication_factor: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka-data:/broker2/kafka
+
+  kafka3:
+    image: wurstmeister/kafka
+    ports:
+      - "9094:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 0.0.0.0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 3
+      KAFKA_offsets_topic_replication_factor: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka-data:/broker2/kafka
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
+    ports:
+      - "9001:9000"
+    links:
+      - zookeeper
+      - kafka1
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      KM_ARGS: -Djava.net.preferIPv4Stack=true
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:4.1.0
+    hostname: schema-registry
+    links:
+      - kafka1
+      - zookeeper
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka1:9092"
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      
+networks:
+  mongo-network:
+    driver: bridge
+
+
